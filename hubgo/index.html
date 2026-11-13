@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f0eee6">
+  <meta name="description" content="广钢公园骑行路线三维沙盘">
+  <title>广钢公园 · 骑行路线沙盘</title>
+  <link rel="stylesheet" href="styles.css?v=ride-1">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js",
+        "three/addons/": "./vendor/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main class="app-shell">
+    <canvas id="terrain-canvas" aria-label="广钢公园三维沙盘与骑行路线，可拖拽旋转和缩放"></canvas>
+    <div class="paper-wash" aria-hidden="true"></div>
+
+    <header class="place-heading">
+      <div class="eyebrow">
+        <span class="eyebrow-index">02</span>
+        <span>RIDE OVERLAY</span>
+      </div>
+      <h1>广钢公园</h1>
+      <p class="place-name">骑行路线 · 三维沙盘</p>
+      <div class="coordinate-row" aria-label="展示模式">
+        <span>RIDE ROUTE</span>
+        <span class="coordinate-separator"></span>
+        <span>ARTISTIC TERRAIN</span>
+      </div>
+    </header>
+
+    <div class="view-hint" id="view-hint">
+      <span class="drag-mark" aria-hidden="true"></span>
+      <span>拖拽旋转</span>
+      <span class="hint-separator"></span>
+      <span>滚轮或双指缩放</span>
+    </div>
+
+    <aside class="control-panel" aria-label="模型控制">
+      <div class="panel-heading">
+        <div>
+          <span class="panel-kicker">RIDE / 02</span>
+          <h2>广钢公园骑行路线</h2>
+        </div>
+        <span class="live-dot" title="模型已加载"><span></span>LIVE</span>
+      </div>
+
+      <div class="model-facts">
+        <div class="fact">
+          <span>路线</span>
+          <strong>5.50</strong>
+          <small>km</small>
+        </div>
+        <div class="fact">
+          <span>时长</span>
+          <strong>22:15</strong>
+          <small>含暂停</small>
+        </div>
+        <div class="fact">
+          <span>建筑</span>
+          <strong id="city-building-count">--</strong>
+          <small>栋</small>
+        </div>
+        <div class="fact">
+          <span>三角面</span>
+          <strong id="triangle-count">--</strong>
+          <small>面</small>
+        </div>
+      </div>
+
+      <div class="city-summary">
+        <span class="city-class">
+          <i aria-hidden="true"></i>
+          <span>环境类型</span>
+          <strong id="city-type">--</strong>
+        </span>
+        <span class="city-composition">
+          <span id="region-area">-- km²</span>
+        </span>
+        <span class="city-modifiers" id="city-modifiers">--</span>
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-heading">
+          <label for="exaggeration">垂直夸张</label>
+          <output id="exaggeration-value" for="exaggeration">3.2 ×</output>
+        </div>
+        <input id="exaggeration" class="terrain-slider" type="range" min="1" max="6" step="0.1" value="3.2">
+        <div class="range-labels" aria-hidden="true">
+          <span>自然</span>
+          <span>雕塑感</span>
+        </div>
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-heading">
+          <label for="route-position">轨迹光点</label>
+          <output id="route-position-value" for="route-position">0%</output>
+        </div>
+        <input id="route-position" class="terrain-slider" type="range" min="0" max="1000" step="1" value="0">
+        <div class="range-labels" aria-hidden="true">
+          <span>起点</span>
+          <span>终点</span>
+        </div>
+      </div>
+
+      <div class="slider-block terrain-opacity-block">
+        <div class="slider-heading">
+          <label for="terrain-opacity">地形不透明度</label>
+          <output id="terrain-opacity-value" for="terrain-opacity">100%</output>
+        </div>
+        <input id="terrain-opacity" class="terrain-slider" type="range" min="0" max="100" step="1" value="100">
+        <div class="range-labels" aria-hidden="true">
+          <span>透明</span>
+          <span>实体</span>
+        </div>
+      </div>
+
+      <div class="slider-block city-opacity-block">
+        <div class="slider-heading">
+          <label for="city-opacity">城市层不透明度</label>
+          <output id="city-opacity-value" for="city-opacity">100%</output>
+        </div>
+        <input id="city-opacity" class="terrain-slider" type="range" min="0" max="100" step="1" value="100">
+        <div class="range-labels" aria-hidden="true">
+          <span>淡出</span>
+          <span>实体</span>
+        </div>
+      </div>
+
+      <div class="layer-switches" aria-label="显示图层">
+        <label class="layer-switch">
+          <input id="show-route" type="checkbox" checked>
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>骑行路线</span>
+        </label>
+        <label class="layer-switch">
+          <input id="show-buildings" type="checkbox" checked>
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>建筑</span>
+        </label>
+        <label class="layer-switch">
+          <input id="show-roads" type="checkbox" checked>
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>道路</span>
+        </label>
+        <label class="layer-switch">
+          <input id="show-water" type="checkbox" checked>
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>水系</span>
+        </label>
+        <label class="layer-switch">
+          <input id="show-contours" type="checkbox" checked>
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>形体线</span>
+        </label>
+        <label class="layer-switch">
+          <input id="auto-rotate" type="checkbox">
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>自动旋转</span>
+        </label>
+      </div>
+
+      <div class="map-source-block">
+        <label class="layer-switch">
+          <input id="show-basemap" type="checkbox">
+          <span class="switch-track" aria-hidden="true"><span></span></span>
+          <span>真实地图底板</span>
+        </label>
+        <label class="map-provider-control" for="basemap-provider">
+          <span>来源</span>
+          <select id="basemap-provider">
+            <option value="osm" selected>OpenStreetMap</option>
+            <option value="amap" disabled>高德地图 · 待接入</option>
+            <option value="tianditu" disabled>天地图 · 待接入</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="icon-button" id="reset-view" aria-label="复位视角" title="复位视角">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 10a8 8 0 1 1 2.35 6.65M4 10V4m0 6h6" />
+          </svg>
+        </button>
+        <button type="button" class="action-button" id="export-glb">
+          导出 GLB
+        </button>
+        <button type="button" class="icon-button" id="toggle-fullscreen" aria-label="切换全屏" title="全屏">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5" />
+          </svg>
+        </button>
+      </div>
+
+      <p id="status-message" class="status-message" role="status" aria-live="polite">
+        路线已叠加到广钢公园沙盘。
+      </p>
+    </aside>
+
+    <footer class="data-credit">
+      <span>地形：SRTM / Mapzen Terrarium</span>
+      <span class="credit-separator"></span>
+      <span>地图与道路：© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a></span>
+      <span>骑行数据：phyphox（气压 + GPS）</span>
+      <span class="credit-note">艺术演绎 · 非测绘成果</span>
+    </footer>
+
+    <div class="loading-screen" id="loading-screen" role="status" aria-live="polite">
+      <div class="loading-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <p>正在生成广钢公园骑行沙盘</p>
+      <div class="loading-track"><span></span></div>
+    </div>
+
+    <div class="error-screen" id="error-screen" hidden>
+      <p>当前浏览器无法加载三维预览。</p>
+      <p class="error-detail">请确认浏览器支持 WebGL 2，并通过本地网页服务打开此页面。</p>
+    </div>
+  </main>
+
+  <script>
+    // 艺术版数据按设计移除了地理元数据；骑行叠加需要显式恢复沙盘的经纬度范围
+    window.SCENE_GEO_BOUNDS = {
+      west: 113.226,
+      east: 113.251,
+      south: 23.0615,
+      north: 23.0785
+    };
+  </script>
+  <script src="assets/ganggong-data.js?v=ride-2"></script>
+  <script src="assets/ganggong-city.js?v=ride-1"></script>
+  <script src="assets/ride-ganggong.js?v=ride-1"></script>
+  <script type="module" src="app.js?v=ride-34"></script>
+</body>
+</html>
